@@ -1,0 +1,21 @@
+[workspace]
+authors = ["Kutay4 <kutay.dogan@metu.edu.tr>"]
+channels = ["conda-forge"]
+name = "ibb-passage-forecast"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+python = "==3.10.19"
+scikit-learn = ">=1.7.2,<2"
+duckdb = ">=1.4.4,<2"
+ipykernel = ">=7.2.0,<8"
+pyarrow = ">=23.0.1,<24"
+polars = ">=1.38.1,<2"
+tqdm = ">=4.67.3,<5"
+pandas = ">=2.3.3,<3"
+
+[pypi-dependencies]
+xgboost = ">=3.2.0, <4"
