@@ -1,3 +1,4 @@
-data/ filter=lfs diff=lfs merge=lfs -text
 data/hourly_transportation.parquet filter=lfs diff=lfs merge=lfs -text
 data/Xy.parquet filter=lfs diff=lfs merge=lfs -text
+results/xgb_cat_split.parquet filter=lfs diff=lfs merge=lfs -text
+results/xgb_split.parquet filter=lfs diff=lfs merge=lfs -text

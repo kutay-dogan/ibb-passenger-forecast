@@ -10,6 +10,7 @@ from sklearn.metrics import (
     median_absolute_error,
     root_mean_squared_error,
 )
+from utils.metrics import get_all_metrics
 
 target_col = "passage"
 date_col = "timestamp"
@@ -87,7 +88,7 @@ def predict_xgb(Xy, xgb: XGBRegressor, log1p: bool = True):
     return y_pred
 
 
-def cv(df: pl.DataFrame, params, log1p: bool = True) -> float:
+def cv(df: pl.DataFrame, cat_col, params, log1p: bool = True) -> float:
     df = df.with_columns(
         [
             df[col].cast(pl.Float32)
@@ -95,7 +96,7 @@ def cv(df: pl.DataFrame, params, log1p: bool = True) -> float:
             if dtype == pl.Float64
         ]
     )
-
+    df.with_columns()
     xgb = XGBRegressor(
         random_state=42,
         enable_categorical=True,
@@ -105,12 +106,12 @@ def cv(df: pl.DataFrame, params, log1p: bool = True) -> float:
         **params,
     )
 
-    mape = []
+    results = []
     mae = []
-    mae_w = []
+    mape = []
     rmse = []
-
-    for split in tqdm(test_split, desc="Processing test splits"):
+    mae_w = []
+    for i, split in enumerate(tqdm(test_split, desc="Processing test splits")):
         Xy_train = df.filter(pl.col(date_col) <= split.start)
         Xy_test = df.filter(pl.col(date_col) > split.start).filter(
             pl.col(date_col) <= split.end
@@ -124,6 +125,18 @@ def cv(df: pl.DataFrame, params, log1p: bool = True) -> float:
 
         y = Xy_test.select(target_col).to_numpy().reshape(-1)
 
+        results.append(
+            pl.concat(
+                [
+                    Xy_test,
+                    pl.DataFrame(y_pred, schema=["prediction"]).with_columns(
+                        pl.lit(i).alias("split")
+                    ),
+                ],
+                how="horizontal",
+            )
+        )
+
         mape.append(mean_absolute_percentage_error(y, y_pred))
         mae.append(median_absolute_error(y, y_pred))
         mae_w.append(median_absolute_error(y, y_pred, sample_weight=1 / y))
@@ -134,7 +147,8 @@ def cv(df: pl.DataFrame, params, log1p: bool = True) -> float:
     print("MAPE: {:.4f} {}".format(np.array(mape).mean(), np.array(mape)))
     print("RMSE: {:.4f}".format(np.array(rmse).mean()))
 
-    return np.array(mae_w).mean()
+    results = pl.concat(results, how="vertical")
+    return get_all_metrics(results, cat_col, target_col)
 
 
 LOG1P = True
@@ -150,4 +164,9 @@ param = {
     "objective": "reg:absoluteerror",
 }
 
-cv(df.drop_nulls(target_col), param, log1p=LOG1P)
+by_all, by_cat = cv(df.drop_nulls(target_col), cat_col, param, log1p=LOG1P)
+
+by_all.write_parquet("results/xgb_split.parquet")
+by_cat.write_parquet("results/xgb_cat_split.parquet")
+
+print(by_cat, by_all)
