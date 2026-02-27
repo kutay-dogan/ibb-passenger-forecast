@@ -1,7 +1,7 @@
 [workspace]
 authors = ["Kutay4 <kutay.dogan@metu.edu.tr>"]
 channels = ["conda-forge"]
-name = "ibb-passage-forecast"
+name = "ibb-passenger-forecast"
 platforms = ["linux-64"]
 version = "0.1.0"
 

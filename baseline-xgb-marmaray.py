@@ -19,6 +19,7 @@ cat_col = "station"
 df = (
     pl.read_parquet("data/Xy.parquet")
     .filter(pl.col("timestamp") >= datetime(2023, 1, 1, 0, 0, 0))
+    .filter(pl.col("line_name") == "MARMARAY")
     .drop("line_name")
 )
 
@@ -166,7 +167,7 @@ param = {
 
 by_all, by_cat = cv(df.drop_nulls(target_col), cat_col, param, log1p=LOG1P)
 
-by_all.write_parquet("results/xgb_split.parquet")
-by_cat.write_parquet("results/xgb_cat_split.parquet")
+by_all.write_parquet("results/marmaray/xgb_split.parquet")
+by_cat.write_parquet("results/marmaray/xgb_cat_split.parquet")
 
 print(by_cat, by_all)

@@ -1,7 +1,6 @@
 import polars as pl
-from stat_features import add_stat_features
-from lag_features import add_lag_features
-
+from utils.stat_features import add_stat_features
+from utils.lag_features import add_lag_features
 
 df = (
     pl.scan_parquet("data/hourly_transportation.parquet")
@@ -38,41 +37,73 @@ df = df.with_columns(
     .alias("timestamp")
 ).drop(["transition_date", "transition_hour"])
 
-dropped_lines = ["NOSTRAM", "T3", "KADIKOY-EMN", "34A"]
+lines = ["M1", "M2", "M4", "T1", "MARMARAY"]
 
-df = df.filter([pl.col("line_name") != line for line in dropped_lines])
+df = df.filter(pl.col("line_name").is_in(lines))
 df = df.filter(pl.col("station").is_not_null())
 
-# filter m4 line only (baseline)
+df = df.with_columns(
+    pl.col("station")
+    .str.replace_many(
+        [
+            " (GUNEY)",
+            " (KUZEY)",
+            " (BATI)",
+            " (DOGU)",
+            " GUNEY",
+            " KUZEY",
+            " BATI",
+            " DOGU",
+        ],
+        [""],
+    )
+    .alias("station")
+)
 
-m4_mapping = {
-    "KARTAL (BATI)": "KARTAL",
-    "KARTAL (DOGU)": "KARTAL",
-    "YAKACIK (DOGU)": "YAKACIK",
-    "YAKACIK (BATI)": "YAKACIK",
+mapping = {
     "HASTANE (DOGU/ADLIYE)": "HASTANE",
-    "HASTANE (BATI)": "HASTANE",
-    "TAVSANTEPE (BATI)": "TAVŞANTEPE",
-    "TAVSANTEPE (DOGU)": "TAVŞANTEPE",
-    "BOSTANCI (DOGU)": "BOSTANCI",
-    "BOSTANCI (BATI)": "BOSTANCI",
-    "PENDIK (BATI)": "PENDIK",
-    "PENDIK (DOGU)": "PENDIK",
-    "KADIKOY (BATI)": "KADIKOY",
-    "KADIKOY (DOGU)": "KADIKOY",
-    "ACIBADEM (DOGU)": "ACIBADEM",
-    "ACIBADEM (BATI)": "ACIBADEM",
     "SABIHA GOKCEN HAVALIMANI": "SABIHA GOKCEN",
     "M4 KURTKOY": "KURTKOY",
+    "SEYRANTEPE 3 STAD GIRISI": "SEYRANTEPE",
+    "SEYRANTEPE 1": "SEYRANTEPE",
+    "SEYRANTEPE 2": "SEYRANTEPE",
+    "4 LEVENT 2": "4 LEVENT",
+    "LEVENT 2": "LEVENT",
+    "SISLI 2": "SISLI",
+    "OSMANBEY 2": "OSMANBEY",
+    "OTOGAR 1": "OTOGAR",
+    "AKSARAY 1": "AKSARAY",
+    "SIRKECI-4": "SIRKECI",
+    "SIRKECI-3": "SIRKECI",
+    "SIRKECI-2": "SIRKECI",
+    "SIRKECI-1": "SIRKECI",
+    "BAKIRKOY-1": "BAKIRKOY",
+    "BAKIRKOY-2": "BAKIRKOY",
+    "USKUDAR-1": "USKUDAR",
+    "USKUDAR-2": "USKUDAR",
+    "USKUDAR-3": "USKUDAR",
+    "GEBZE-1": "GEBZE",
+    "GEBZE-2": "GEBZE",
+    "KUCUKYALI-1": "KUCUKYALI",
+    "KUCUKYALI-2": "KUCUKYALI",
+    "YENIKAPI-1": "YENIKAPI",
+    "YENIKAPI-2": "YENIKAPI",
+    "YENIKAPI-3": "YENIKAPI",
+    "TERSANE-1": "TERSANE",
+    "TERSANE-2": "TERSANE",
+    "BOSTANCI-1": "BOSTANCI",
+    "BOSTANCI-2": "BOSTANCI",
+    "CEVIZLI-1": "CEVIZLI",
+    "CEVIZLI-2": "CEVIZLI",
+    "EMINONU 2": "EMINONU",
+    "ZEYTINBURNU 2": "ZEYTINBURNU",
+    "KABATAS 2": "KABATAS",
 }
 
-df = df.filter(pl.col("line_name") == "M4").with_columns(
-    pl.col("station").replace(m4_mapping).alias("station")
-)
+df = df.with_columns(pl.col("station").replace(mapping).alias("station"))
 df = df.group_by("line_name", "station", "timestamp").agg(
     pl.sum("number_of_passage").alias("passage")
 )
-
 
 cat_cols = ["line_name", "station"]
 date_col = "timestamp"

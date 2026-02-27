@@ -26,25 +26,33 @@ def get_all_metrics(results: pl.DataFrame, cat_col, target_col):
         )
 
     by_all = (
-        results.group_by("split", cat_col)
-        .agg(
-            pl.struct(target_col, "prediction")
-            .map_batches(calculate_metrics)
-            .alias("metrics"),
+        (
+            results.group_by("split", cat_col)
+            .agg(
+                pl.struct(target_col, "prediction")
+                .map_batches(calculate_metrics)
+                .alias("metrics"),
+            )
+            .with_columns(pl.col("metrics").list.first())
+            .unnest("metrics")
         )
-        .with_columns(pl.col("metrics").list.first())
-        .unnest("metrics")
-    ).sort(["split", cat_col])
+        .sort(["split", cat_col])
+        .with_columns(pl.selectors.float().cast(pl.Float32))
+    )
 
     by_cat = (
-        results.group_by(cat_col)
-        .agg(
-            pl.struct(target_col, "prediction")
-            .map_batches(calculate_metrics)
-            .alias("metrics"),
+        (
+            results.group_by(cat_col)
+            .agg(
+                pl.struct(target_col, "prediction")
+                .map_batches(calculate_metrics)
+                .alias("metrics"),
+            )
+            .with_columns(pl.col("metrics").list.first())
+            .unnest("metrics")
         )
-        .with_columns(pl.col("metrics").list.first())
-        .unnest("metrics")
-    ).sort(cat_col)
+        .sort(cat_col)
+        .with_columns(pl.selectors.float().cast(pl.Float32))
+    )
 
     return by_all, by_cat

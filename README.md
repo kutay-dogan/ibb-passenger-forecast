@@ -1,1 +1,1 @@
-# ibb-passage-forecast
+# ibb-passenger-forecast

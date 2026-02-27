@@ -2,7 +2,7 @@ import duckdb as ddb
 import polars as pl
 
 
-def add_stat_features(df, target_col, date_col, cat_cols, intervals):
+def add_stat_features(df, target_col, date_col, cat_cols, intervals, horizon:int = 30):
     cat_col_str = ", ".join(col for col in cat_cols)
     cat_join_str = " AND ".join(f"a.{col} = b.{col}" for col in cat_cols)
     select_clauses = []
@@ -59,7 +59,7 @@ def add_stat_features(df, target_col, date_col, cat_cols, intervals):
         LEFT JOIN
             features b
         ON
-            b.{date_col} + INTERVAL 30 DAYS = a.{date_col}
+            b.{date_col} + INTERVAL {horizon} DAYS = a.{date_col}
             AND {cat_join_str}
         ORDER BY a.{date_col}
         """
