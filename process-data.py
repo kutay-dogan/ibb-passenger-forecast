@@ -1,6 +1,7 @@
 import polars as pl
 from utils.stat_features import add_stat_features
 from utils.lag_features import add_lag_features
+from utils.date_features import add_date_features
 
 df = (
     pl.scan_parquet("data/hourly_transportation.parquet")
@@ -118,5 +119,7 @@ df = add_stat_features(
     intervals=["1 day", "1 week", "1 month", "3 months"],
 ).collect()
 
-df = add_lag_features(df, target_col, cat_cols, date_col, lags)
+df = add_lag_features(df, target_col, cat_cols, date_col, lags).collect()
+df = add_date_features(df,date_col)
+
 df.sink_parquet("data/Xy.parquet")
