@@ -99,6 +99,9 @@ mapping = {
     "EMINONU 2": "EMINONU",
     "ZEYTINBURNU 2": "ZEYTINBURNU",
     "KABATAS 2": "KABATAS",
+    "AYRILIKCESME": "AYRILIKCESMESI",
+    "CAMI": "YAVUZSELIM",
+    "KERESTECILER": "MERTER"
 }
 
 df = df.with_columns(pl.col("station").replace(mapping).alias("station"))
