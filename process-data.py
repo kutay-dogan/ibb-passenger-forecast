@@ -1,4 +1,5 @@
 import polars as pl
+from utils.densification import get_dense
 from utils.stat_features import add_stat_features
 from utils.lag_features import add_lag_features
 from utils.date_features import add_date_features
@@ -101,7 +102,7 @@ mapping = {
     "KABATAS 2": "KABATAS",
     "AYRILIKCESME": "AYRILIKCESMESI",
     "CAMI": "YAVUZSELIM",
-    "KERESTECILER": "MERTER"
+    "KERESTECILER": "MERTER",
 }
 
 df = df.with_columns(pl.col("station").replace(mapping).alias("station"))
@@ -114,6 +115,8 @@ date_col = "timestamp"
 target_col = "passage"
 lags = [30, 31, 32, 33, 35, 37, 40, 42, 49, 56, 63, 70]
 
+df = get_dense(df, target_col, date_col, cat_cols)
+
 df = add_stat_features(
     df,
     "passage",
@@ -123,6 +126,6 @@ df = add_stat_features(
 ).collect()
 
 df = add_lag_features(df, target_col, cat_cols, date_col, lags).collect()
-df = add_date_features(df,date_col)
+df = add_date_features(df, date_col)
 
 df.sink_parquet("data/Xy.parquet")
