@@ -5,7 +5,7 @@ from holidays import Turkey
 
 class Holiday:
     def __init__(self, start=2021, end=2025):
-        self.holidays = Turkey(years=[start, end])
+        self.holidays = Turkey(years=[start, end], expand=True)
 
     def __call__(self, date) -> int:
         return int(date in self.holidays)
